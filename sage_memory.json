@@ -1,0 +1,45 @@
+{
+  "user_name": "Shruthi",
+  "session_count": 4,
+  "last_run": "2026-03-22T15:39:53.244950",
+  "past_products": [
+    "Professionals transitioning into AI-adjacent roles have real hands-on experience",
+    "Professionals transitioning into AI-adjacent roles have real hands-on experience",
+    "Professionals transitioning into AI-adjacent roles have real hands-on experience",
+    "Professionals transitioning into AI-adjacent roles have real hands-on experience"
+  ],
+  "preferences": {
+    "tends_to_edit": [
+      "discovery",
+      "roadmap"
+    ],
+    "tends_to_regenerate": [],
+    "always_approves": [],
+    "common_feedback": [
+      "Pivot to recruiter as primary customer \u2014 they have budget and are  actively struggling to verify AI skills. Regenerate discovery with  recruiter as ICP, candidate as the supply side of the marketplace.",
+      "Primary value is the signal \u2014 recruiters pay for verified proof of  hands-on AI skills, not candidate access. We are not building a  marketplace. Think of it like a skills verification layer that sits  on top of LinkedIn. Approve this direction and move to roadmap."
+    ]
+  },
+  "checkpoint_history": [
+    {
+      "stage": "discovery",
+      "decision": "R",
+      "timestamp": "2026-03-22T16:03:25.370703"
+    },
+    {
+      "stage": "discovery",
+      "decision": "R",
+      "timestamp": "2026-03-22T16:12:24.911793"
+    },
+    {
+      "stage": "discovery",
+      "decision": "E",
+      "timestamp": "2026-03-22T16:23:43.791320"
+    },
+    {
+      "stage": "roadmap",
+      "decision": "E",
+      "timestamp": "2026-03-22T16:35:28.543253"
+    }
+  ]
+}
