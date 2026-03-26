@@ -215,7 +215,7 @@ export default function App() {
     setLoading(true);
 
     addMessage({ type: 'sage-intro', stageKey: stage.key, content: stage.intro, icon: stage.icon, label: stage.label });
-    sageSpeak(stage.intro);
+    setTimeout(() => sageSpeak(stage.intro), 400);
 
     try {
       const output = await runStage(stage.key, ctx, apiKey || apiKeyInput);
@@ -226,7 +226,7 @@ export default function App() {
 
       addMessage({ type: 'artifact', stageKey: stage.key, stageLabel: stage.label, content: output });
       setLoading(false);
-      sageSpeak(reaction);
+      setTimeout(() => sageSpeak(reaction), 800);
       setPendingCheckpoint({ idx, ctx: newCtx, stage, reaction, output });
     } catch (err) {
       setLoading(false);
