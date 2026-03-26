@@ -9,28 +9,30 @@ const MEMORY_KEY = 'sage_memory';
 // ── Sage voice via Web Speech API ─────────────────────────────
 function sageSpeak(text) {
   if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
   const clean = text.replace(/[*#`>_~]/g, '').trim();
-  if (!clean) return;
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.rate = 0.92;
+  utterance.pitch = 1.05;
+  utterance.volume = 1;
 
-  const speak = () => {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.rate = 0.92;
-    utterance.pitch = 1.05;
-    utterance.volume = 1;
+  const setVoice = () => {
     const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.name.includes('Samantha')) ||
-      voices.find(v => v.name.includes('Karen')) ||
-      voices.find(v => v.name.includes('Moira')) ||
-      voices.find(v => v.lang === 'en-US') || voices[0];
+    const preferred = voices.find(v =>
+      v.name.includes('Samantha') ||
+      v.name.includes('Karen') ||
+      v.name.includes('Moira') ||
+      (v.name.includes('Female') && v.lang.startsWith('en')) ||
+      (v.lang === 'en-US' && v.name.toLowerCase().includes('female'))
+    ) || voices.find(v => v.lang === 'en-US') || voices[0];
     if (preferred) utterance.voice = preferred;
     window.speechSynthesis.speak(utterance);
   };
 
   if (window.speechSynthesis.getVoices().length > 0) {
-    speak();
+    setVoice();
   } else {
-    window.speechSynthesis.onvoiceschanged = speak;
+    window.speechSynthesis.onvoiceschanged = setVoice;
   }
 }
 
@@ -224,7 +226,7 @@ export default function App() {
 
       addMessage({ type: 'artifact', stageKey: stage.key, stageLabel: stage.label, content: output });
       setLoading(false);
-      setTimeout(() => sageSpeak(reaction), 1200);
+      sageSpeak(reaction);
       setPendingCheckpoint({ idx, ctx: newCtx, stage, reaction, output });
     } catch (err) {
       setLoading(false);
