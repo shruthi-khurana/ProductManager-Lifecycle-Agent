@@ -6,6 +6,36 @@ import './App.css';
 
 const MEMORY_KEY = 'sage_memory';
 
+// ── Sage voice via Web Speech API ─────────────────────────────
+function sageSpeak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/[*#`>_~]/g, '').trim();
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.rate = 0.92;
+  utterance.pitch = 1.05;
+  utterance.volume = 1;
+
+  const setVoice = () => {
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.includes('Samantha') ||
+      v.name.includes('Karen') ||
+      v.name.includes('Moira') ||
+      (v.name.includes('Female') && v.lang.startsWith('en')) ||
+      (v.lang === 'en-US' && v.name.toLowerCase().includes('female'))
+    ) || voices.find(v => v.lang === 'en-US') || voices[0];
+    if (preferred) utterance.voice = preferred;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  if (window.speechSynthesis.getVoices().length > 0) {
+    setVoice();
+  } else {
+    window.speechSynthesis.onvoiceschanged = setVoice;
+  }
+}
+
 function loadMemory() {
   try {
     const raw = localStorage.getItem(MEMORY_KEY);
@@ -153,6 +183,7 @@ export default function App() {
       : `Hi — I'm Sage, your PM partner. We're going to work through the full product lifecycle together, one stage at a time. I'll do the drafting; you make the calls. Let's build something good.`;
 
     addMessage({ type: 'sage', content: greeting });
+    sageSpeak(greeting);
     setTimeout(() => {
       addMessage({ type: 'sage', content: "What product problem are we solving today? Give me a clear, specific problem statement and I'll take it from there." });
       setPhase('problem');
@@ -184,6 +215,7 @@ export default function App() {
     setLoading(true);
 
     addMessage({ type: 'sage-intro', stageKey: stage.key, content: stage.intro, icon: stage.icon, label: stage.label });
+    sageSpeak(stage.intro);
 
     try {
       const output = await runStage(stage.key, ctx, apiKey || apiKeyInput);
@@ -194,7 +226,7 @@ export default function App() {
 
       addMessage({ type: 'artifact', stageKey: stage.key, stageLabel: stage.label, content: output });
       setLoading(false);
-
+      sageSpeak(reaction);
       setPendingCheckpoint({ idx, ctx: newCtx, stage, reaction, output });
     } catch (err) {
       setLoading(false);
@@ -223,7 +255,9 @@ export default function App() {
     setPendingCheckpoint(null);
     setShowFeedback(false);
     setCheckpointFeedback('');
-    addMessage({ type: 'sage', content: `Got it. Moving to ${STAGES[idx + 1] ? STAGES[idx + 1].label : 'the final summary'}.` });
+    const approvalMsg = `Got it. Moving to ${STAGES[idx + 1] ? STAGES[idx + 1].label : 'the final summary'}.`;
+    addMessage({ type: 'sage', content: approvalMsg });
+    sageSpeak(approvalMsg);
     await runNextStage(idx + 1, ctx);
   }, [memory, addMessage, runNextStage]);
 
