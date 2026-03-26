@@ -7,32 +7,46 @@ import './App.css';
 const MEMORY_KEY = 'sage_memory';
 
 // ── Sage voice via Web Speech API ─────────────────────────────
-function sageSpeak(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const clean = text.replace(/[*#`>_~]/g, '').trim();
-  const utterance = new SpeechSynthesisUtterance(clean);
+const speechQueue = [];
+let isSpeaking = false;
+
+function processSpeechQueue() {
+  if (isSpeaking || speechQueue.length === 0) return;
+  isSpeaking = true;
+  const text = speechQueue.shift();
+  const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.92;
   utterance.pitch = 1.05;
   utterance.volume = 1;
 
-  const setVoice = () => {
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v =>
-      v.name.includes('Samantha') ||
-      v.name.includes('Karen') ||
-      v.name.includes('Moira') ||
-      (v.name.includes('Female') && v.lang.startsWith('en')) ||
-      (v.lang === 'en-US' && v.name.toLowerCase().includes('female'))
-    ) || voices.find(v => v.lang === 'en-US') || voices[0];
-    if (preferred) utterance.voice = preferred;
-    window.speechSynthesis.speak(utterance);
-  };
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.name.includes('Samantha')) ||
+    voices.find(v => v.name.includes('Karen')) ||
+    voices.find(v => v.name.includes('Moira')) ||
+    voices.find(v => v.lang === 'en-US') ||
+    voices[0];
+  if (preferred) utterance.voice = preferred;
 
-  if (window.speechSynthesis.getVoices().length > 0) {
-    setVoice();
+  utterance.onend = () => {
+    isSpeaking = false;
+    processSpeechQueue();
+  };
+  utterance.onerror = () => {
+    isSpeaking = false;
+    processSpeechQueue();
+  };
+  window.speechSynthesis.speak(utterance);
+}
+
+function sageSpeak(text) {
+  if (!window.speechSynthesis) return;
+  const clean = text.replace(/[*#`>_~]/g, '').trim();
+  if (!clean) return;
+  speechQueue.push(clean);
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = processSpeechQueue;
   } else {
-    window.speechSynthesis.onvoiceschanged = setVoice;
+    processSpeechQueue();
   }
 }
 
@@ -215,7 +229,7 @@ export default function App() {
     setLoading(true);
 
     addMessage({ type: 'sage-intro', stageKey: stage.key, content: stage.intro, icon: stage.icon, label: stage.label });
-    setTimeout(() => sageSpeak(stage.intro), 400);
+    sageSpeak(stage.intro);
 
     try {
       const output = await runStage(stage.key, ctx, apiKey || apiKeyInput);
@@ -226,7 +240,7 @@ export default function App() {
 
       addMessage({ type: 'artifact', stageKey: stage.key, stageLabel: stage.label, content: output });
       setLoading(false);
-      setTimeout(() => sageSpeak(reaction), 800);
+      sageSpeak(reaction);
       setPendingCheckpoint({ idx, ctx: newCtx, stage, reaction, output });
     } catch (err) {
       setLoading(false);
