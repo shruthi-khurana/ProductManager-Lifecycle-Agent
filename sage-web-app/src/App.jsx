@@ -7,46 +7,30 @@ import './App.css';
 const MEMORY_KEY = 'sage_memory';
 
 // ── Sage voice via Web Speech API ─────────────────────────────
-const speechQueue = [];
-let isSpeaking = false;
-
-function processSpeechQueue() {
-  if (isSpeaking || speechQueue.length === 0) return;
-  isSpeaking = true;
-  const text = speechQueue.shift();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.92;
-  utterance.pitch = 1.05;
-  utterance.volume = 1;
-
-  const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v => v.name.includes('Samantha')) ||
-    voices.find(v => v.name.includes('Karen')) ||
-    voices.find(v => v.name.includes('Moira')) ||
-    voices.find(v => v.lang === 'en-US') ||
-    voices[0];
-  if (preferred) utterance.voice = preferred;
-
-  utterance.onend = () => {
-    isSpeaking = false;
-    processSpeechQueue();
-  };
-  utterance.onerror = () => {
-    isSpeaking = false;
-    processSpeechQueue();
-  };
-  window.speechSynthesis.speak(utterance);
-}
-
 function sageSpeak(text) {
   if (!window.speechSynthesis) return;
   const clean = text.replace(/[*#`>_~]/g, '').trim();
   if (!clean) return;
-  speechQueue.push(clean);
-  if (window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = processSpeechQueue;
+
+  const speak = () => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.rate = 0.92;
+    utterance.pitch = 1.05;
+    utterance.volume = 1;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('Samantha')) ||
+      voices.find(v => v.name.includes('Karen')) ||
+      voices.find(v => v.name.includes('Moira')) ||
+      voices.find(v => v.lang === 'en-US') || voices[0];
+    if (preferred) utterance.voice = preferred;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  if (window.speechSynthesis.getVoices().length > 0) {
+    speak();
   } else {
-    processSpeechQueue();
+    window.speechSynthesis.onvoiceschanged = speak;
   }
 }
 
@@ -240,7 +224,7 @@ export default function App() {
 
       addMessage({ type: 'artifact', stageKey: stage.key, stageLabel: stage.label, content: output });
       setLoading(false);
-      sageSpeak(reaction);
+      setTimeout(() => sageSpeak(reaction), 1200);
       setPendingCheckpoint({ idx, ctx: newCtx, stage, reaction, output });
     } catch (err) {
       setLoading(false);
