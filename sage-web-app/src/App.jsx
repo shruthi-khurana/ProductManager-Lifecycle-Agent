@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { runStage, getSageReaction, getSummary, STAGES } from './sageApi';
+import { runStage, getSageReaction, getSageSpokenLine, getSummary, STAGES } from './sageApi';
 import './App.css';
 
 const MEMORY_KEY = 'sage_memory';
@@ -9,30 +9,28 @@ const MEMORY_KEY = 'sage_memory';
 // ── Sage voice via Web Speech API ─────────────────────────────
 function sageSpeak(text) {
   if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
   const clean = text.replace(/[*#`>_~]/g, '').trim();
-  const utterance = new SpeechSynthesisUtterance(clean);
-  utterance.rate = 0.92;
-  utterance.pitch = 1.05;
-  utterance.volume = 1;
+  if (!clean) return;
 
-  const setVoice = () => {
+  const speak = () => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.rate = 0.92;
+    utterance.pitch = 1.05;
+    utterance.volume = 1;
     const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v =>
-      v.name.includes('Samantha') ||
-      v.name.includes('Karen') ||
-      v.name.includes('Moira') ||
-      (v.name.includes('Female') && v.lang.startsWith('en')) ||
-      (v.lang === 'en-US' && v.name.toLowerCase().includes('female'))
-    ) || voices.find(v => v.lang === 'en-US') || voices[0];
+    const preferred = voices.find(v => v.name.includes('Samantha')) ||
+      voices.find(v => v.name.includes('Karen')) ||
+      voices.find(v => v.name.includes('Moira')) ||
+      voices.find(v => v.lang === 'en-US') || voices[0];
     if (preferred) utterance.voice = preferred;
     window.speechSynthesis.speak(utterance);
   };
 
   if (window.speechSynthesis.getVoices().length > 0) {
-    setVoice();
+    speak();
   } else {
-    window.speechSynthesis.onvoiceschanged = setVoice;
+    window.speechSynthesis.onvoiceschanged = speak;
   }
 }
 
@@ -104,12 +102,19 @@ function ArtifactCard({ stageName, content, onDownload }) {
   );
 }
 
-function CheckpointCard({ reaction, onApprove, onEdit, onRegenerate, feedback, setFeedback, showFeedback, setShowFeedback }) {
+function CheckpointCard({ reaction, spokenLine, onApprove, onEdit, onRegenerate, feedback, setFeedback, showFeedback, setShowFeedback }) {
   return (
     <div className="checkpoint-card">
       <div className="checkpoint-header">
         <SageAvatar size={28} />
         <span className="checkpoint-label">Sage checkpoint</span>
+        <button
+          className="speak-btn"
+          onClick={() => sageSpeak(spokenLine || reaction)}
+          title="Hear Sage's take"
+        >
+          🔊
+        </button>
       </div>
       <p className="checkpoint-reaction">{reaction}</p>
       {showFeedback ? (
@@ -226,8 +231,8 @@ export default function App() {
 
       addMessage({ type: 'artifact', stageKey: stage.key, stageLabel: stage.label, content: output });
       setLoading(false);
-      sageSpeak(reaction);
-      setPendingCheckpoint({ idx, ctx: newCtx, stage, reaction, output });
+      const spokenLine = await getSageSpokenLine(reaction, apiKey || apiKeyInput);
+      setPendingCheckpoint({ idx, ctx: newCtx, stage, reaction, spokenLine, output });
     } catch (err) {
       setLoading(false);
       addMessage({ type: 'error', content: `Error: ${err.message}` });
@@ -241,6 +246,7 @@ export default function App() {
         type: 'checkpoint',
         stageKey: stage.key,
         reaction,
+        spokenLine,
         onApprove: () => handleApprove(idx, ctx),
         onEdit: () => handleEdit(idx, ctx, stage),
         onRegenerate: (fb) => handleRegenerate(idx, ctx, stage, fb)
@@ -417,6 +423,7 @@ export default function App() {
               <div key={msg.id} className="message sage-message" style={{ animation: 'fadeUp 0.3s ease' }}>
                 <CheckpointCard
                   reaction={msg.reaction}
+                  spokenLine={msg.spokenLine}
                   onApprove={msg.onApprove}
                   onEdit={msg.onEdit}
                   onRegenerate={msg.onRegenerate}

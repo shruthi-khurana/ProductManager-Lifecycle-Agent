@@ -282,6 +282,17 @@ ${output.slice(0, 1500)}`;
   return callClaude('', prompt, apiKey);
 }
 
+export async function getSageSpokenLine(reaction, apiKey) {
+  const prompt = `You are Sage, a PM partner. Summarize this checkpoint reaction into ONE punchy spoken sentence of maximum 15 words. 
+No filler words. Direct, sharp, memorable. Something you'd say out loud to a colleague.
+
+Reaction: ${reaction}
+
+Respond with only the single sentence, nothing else.`;
+
+  return callClaude('', prompt, apiKey);
+}
+
 export async function getSummary(context, apiKey) {
   const prompt = `Problem: ${context.problem}
 
