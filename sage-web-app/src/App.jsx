@@ -184,7 +184,7 @@ export default function App() {
     const isReturn = memory.sessionCount > 1;
     const lastProblem = memory.pastProblems?.slice(-1)[0];
     const greeting = isReturn
-      ? `Welcome back. ${lastProblem ? `Last time we worked on "${lastProblem.slice(0, 60)}...".` : ''} Session ${memory.sessionCount} — let's get into it.`
+      ? `Welcome back. ${lastProblem ? 'Last time we worked on ' + lastProblem.slice(0, 60) + ' — ' : ''} Session ${memory.sessionCount}, let's get into it.`
       : `Hi — I'm Sage, your PM partner. We're going to work through the full product lifecycle together, one stage at a time. I'll do the drafting; you make the calls. Let's build something good.`;
 
     addMessage({ type: 'sage', content: greeting });
