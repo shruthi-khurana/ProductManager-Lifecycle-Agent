@@ -241,7 +241,7 @@ export default function App() {
 
   useEffect(() => {
     if (pendingCheckpoint) {
-      const { reaction, idx, ctx, stage } = pendingCheckpoint;
+      const { reaction, spokenLine, idx, ctx, stage } = pendingCheckpoint;
       addMessage({
         type: 'checkpoint',
         stageKey: stage.key,
