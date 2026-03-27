@@ -102,7 +102,7 @@ function ArtifactCard({ stageName, content, onDownload }) {
   );
 }
 
-function CheckpointCard({ reaction, spokenLine, onApprove, onEdit, onRegenerate, feedback, setFeedback, showFeedback, setShowFeedback }) {
+function CheckpointCard({ reaction, spokenLine, onApprove, onEdit, onRegenerate, feedback, setFeedback, showFeedback, setShowFeedback, onSpeak }) {
   return (
     <div className="checkpoint-card">
       <div className="checkpoint-header">
@@ -110,7 +110,7 @@ function CheckpointCard({ reaction, spokenLine, onApprove, onEdit, onRegenerate,
         <span className="checkpoint-label">Sage checkpoint</span>
         <button
           className="speak-btn"
-          onClick={() => sageSpeak(spokenLine || reaction)}
+          onClick={() => onSpeak(spokenLine || reaction)}
           title="Hear Sage's take"
         >
           🔊
@@ -427,6 +427,7 @@ export default function App() {
                   onApprove={msg.onApprove}
                   onEdit={msg.onEdit}
                   onRegenerate={msg.onRegenerate}
+                  onSpeak={sageSpeak}
                   feedback={checkpointFeedback}
                   setFeedback={setCheckpointFeedback}
                   showFeedback={showFeedback}
